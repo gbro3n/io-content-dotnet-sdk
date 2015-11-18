@@ -50,6 +50,8 @@
     <Compile Include="ContentClientBaseParameters.cs" />
     <Compile Include="ContentClient.cs" />
     <Compile Include="Interfaces\IContentClient.cs" />
+    <Compile Include="Interfaces\IMemoryCacheService.cs" />
+    <Compile Include="MemoryCacheService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Serialization\CamelCaseToPascalCaseDynamicConverter.cs" />
     <Compile Include="Serialization\JsonSerializer.cs" />

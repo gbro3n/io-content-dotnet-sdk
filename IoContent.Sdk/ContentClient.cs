@@ -16,7 +16,7 @@ namespace IoContent.Sdk
 	{
 		private bool m_disposed;
 
-		private int m_cacheInvalidationSeconds;
+		private IMemoryCacheService m_memoryCacheService;
 
 		private readonly string m_apiUrl;
 
@@ -47,12 +47,13 @@ namespace IoContent.Sdk
 
 			m_apiUrl = (apiEndpointUrl ?? "https://iocontent.com/") + "api/" + apiVersion + "/content/" + subAccountkey + "/" + contentType;
 
+			m_memoryCacheService = new MemoryCacheService();
 			m_webClient = new WebClient();
 		}
 
 		public IContentClient WithLocalCache(int cacheInvalidationSeconds)
 		{
-			m_cacheInvalidationSeconds = cacheInvalidationSeconds;
+			CacheInvalidationSeconds = cacheInvalidationSeconds;
 
 			return this;
 		}
@@ -65,22 +66,13 @@ namespace IoContent.Sdk
 
 				string cacheKey = GetCacheKey(queryString);
 
-				HttpContext.Current.Cache.Remove(cacheKey);
+				m_memoryCacheService.Remove(cacheKey);
 			}
 			else
 			{
 				// Clear the entire cache
 
-				foreach (System.Collections.DictionaryEntry cacheEntry in HttpContext.Current.Cache)
-				{
-					// Only remove CMS API cache items - other .NET cache items
-					// may exist in the cache which we do not want to remove
-
-					if (((string) cacheEntry.Key).StartsWith(CacheKeyPrefix))
-					{
-						HttpContext.Current.Cache.Remove((string) cacheEntry.Key);
-					}
-				}
+				m_memoryCacheService.RemoveAllWithPrefix(this.CacheKeyPrefix);
 			}
 		}
 
@@ -91,22 +83,15 @@ namespace IoContent.Sdk
 		/// <returns></returns>
 		public string GetJson(string queryString)
 		{
-			string jsonResponse = null;
-
 			// No need to authenticate prior to cache call, since cache data
 			// is stored on the client
 
 			string cacheKey = GetCacheKey(queryString);
 
-			if (m_cacheInvalidationSeconds > 0)
+			Func<object> getCacheObjCallback = () =>
 			{
-				object cacheData = HttpContext.Current.Cache.Get(cacheKey);
+				string jsonResponse;
 
-				jsonResponse = (string) cacheData;
-			}
-
-			if (jsonResponse == null)
-			{
 				// jsonResponse indicates that string has not been assigned from
 				// cache, so call API to retrieve json
 
@@ -143,7 +128,7 @@ namespace IoContent.Sdk
 
 							if (response != null)
 							{
-								statusCodeString = ((int) response.StatusCode).ToString(CultureInfo.InvariantCulture);
+								statusCodeString = ((int)response.StatusCode).ToString(CultureInfo.InvariantCulture);
 
 								statusCodeString = "(" + statusCodeString + ")";
 							}
@@ -158,7 +143,7 @@ namespace IoContent.Sdk
 
 							throw new WebException(responseText, wEx.Status);
 						}
-					  
+
 						// Rethrow as received
 
 						throw wEx;
@@ -171,17 +156,28 @@ namespace IoContent.Sdk
 
 				jsonResponse = Encoding.UTF8.GetString(bytes);
 
-				if (m_cacheInvalidationSeconds > 0)
-				{
-					// Using the cache http://msdn.microsoft.com/en-us/library/vstudio/18c1wd61(v=vs.100).aspx
+				return jsonResponse;
+			};
 
-					DateTime absoluteExpiration = DateTime.Now.AddSeconds(m_cacheInvalidationSeconds);
+			object cachedObject;
 
-					HttpContext.Current.Cache.Insert(cacheKey, jsonResponse, null, absoluteExpiration, System.Web.Caching.Cache.NoSlidingExpiration);
-				}
+			if (CacheInvalidationSeconds > 0)
+			{
+				cachedObject = m_memoryCacheService.Get(
+
+					cacheKey,
+					getCacheObjCallback,
+					DateTime.Now.AddSeconds(CacheInvalidationSeconds)
+				);
 			}
+			else
+			{
+				cachedObject = getCacheObjCallback();
+            }
 
-			return jsonResponse;
+			string json = (string) cachedObject;
+
+			return json;
 		}
 
 		/// <summary>
@@ -233,6 +229,8 @@ namespace IoContent.Sdk
 			}
 		}
 
+		public int CacheInvalidationSeconds { get; private set; }
+
 		private string CacheKeyPrefix
 		{
 			get { return "iocontent_local_"; }
@@ -240,7 +238,7 @@ namespace IoContent.Sdk
 
 		private string GetCacheKey(string urlPath)
 		{
-			return this.CacheKeyPrefix + Base64Encode(urlPath);
+			return string.Format("{0}_" + "_{1}_{2}", this.CacheKeyPrefix, this.CacheInvalidationSeconds, Base64Encode(urlPath));
 		}
 
 		private string Base64Encode(string plainText)
