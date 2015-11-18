@@ -6,9 +6,9 @@ using System.Runtime.InteropServices;
 // associated with an assembly.
 [assembly: AssemblyTitle("IoContent.Sdk")]
 [assembly: AssemblyDescription(
-@"I/O Content SDK is a server side wrapper around the I/O Content REST API, providing an intutive programming interface along with additional features such as local application caching. 
+@"I/O Content SDK is a server side wrapper around the I/O Content REST API, providing an intuitive programming interface along with additional features such as local application caching. 
 
-The SDK is intended for use in a server side context (other SDKs including the JavaScript SDK are available for client side development).
+The SDK is intended for use in a server side context (other SDKs including the JavaScript library are available for client side development).
 
 I/O Content is a service that enables you to store and edit content, serving multiple device types via a platform agnostic API. ")]
 [assembly: AssemblyConfiguration("")]
@@ -36,5 +36,5 @@ I/O Content is a service that enables you to store and edit content, serving mul
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.4.0.0")]
-[assembly: AssemblyFileVersion("1.4.0.0")]
+[assembly: AssemblyVersion("1.5.0.0")]
+[assembly: AssemblyFileVersion("1.5.0.0")]

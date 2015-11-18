@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>$id$</id>
+    <version>$version$</version>
+    <title>$title$</title>
+    <authors>$author$</authors>
+    <owners>$author$</owners>
+    <projectUrl>https://www.iocontent.com</projectUrl>
+    <iconUrl>https://s3-eu-west-1.amazonaws.com/iocontent-corporate/logos/io_content_logo_green_blue_32_x_32.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>$description$</description>
+	<summary>.NET wrapper for I/O Content API</summary>
+    <releaseNotes>Updates to content client interface, release build.</releaseNotes>
+    <copyright>Copyright © I/O Content 2015</copyright>
+    <tags>cms api iocontent sdk content management service</tags>
+  </metadata>
+</package>
