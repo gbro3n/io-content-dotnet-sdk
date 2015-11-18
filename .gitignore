@@ -12,6 +12,9 @@
 *.suo
 *.log
 *.csproj.user
+*.nupkg
+nuget.exe
+
 
 application/node_modules/
 
