@@ -19,8 +19,8 @@ namespace IoContent.Sdk
 					cacheKey,
 					cacheObj,
 					null,
-					absoluteExpirationDate.HasValue ? (DateTime)absoluteExpirationDate : System.Web.Caching.Cache.NoAbsoluteExpiration,
-					slidingExpiration.HasValue ? (TimeSpan)slidingExpiration : System.Web.Caching.Cache.NoSlidingExpiration
+					absoluteExpirationDate.HasValue ? (DateTime) absoluteExpirationDate : Cache.NoAbsoluteExpiration,
+					slidingExpiration.HasValue ? (TimeSpan) slidingExpiration : Cache.NoSlidingExpiration
 				);
 			}
 

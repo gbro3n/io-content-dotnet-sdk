@@ -16,41 +16,52 @@ namespace IoContent.Sdk
 	{
 		private bool m_disposed;
 
+		private string m_apiUrl;
+
+		private WebClient m_webClient;
+
 		private IMemoryCacheService m_memoryCacheService;
 
-		private readonly string m_apiUrl;
-
-		private readonly WebClient m_webClient;
-
 		public ContentClient(ContentClientBaseParameters contentClientBaseParameters)
-			: this(
-				apiVersion: contentClientBaseParameters.ApiVersion,
-				subAccountkey: contentClientBaseParameters.SubAccountKey, 
-				contentType: contentClientBaseParameters.ContentType, 
-				apiEndpointUrl: contentClientBaseParameters.ApiEndpointUrl
-			)
 		{
-
+			this.Initialise(contentClientBaseParameters, new MemoryCacheService());
 		}
 
-		public ContentClient(string apiVersion, string subAccountkey, string contentType, string apiEndpointUrl = null)
+		public ContentClient(ContentClientBaseParameters contentClientBaseParameters, IMemoryCacheService memoryCacheService)
 		{
-			// Check API endpoint format where specified
+			this.Initialise(contentClientBaseParameters, memoryCacheService);
+		}
 
-			if (!string.IsNullOrWhiteSpace(apiEndpointUrl))
+		private void Initialise(ContentClientBaseParameters contentClientBaseParameters, IMemoryCacheService memoryCacheService)
+		{
+			if (!string.IsNullOrWhiteSpace(contentClientBaseParameters.ApiEndpointUrl))
 			{
-				if (!apiEndpointUrl.EndsWith("/"))
+				if (!contentClientBaseParameters.ApiEndpointUrl.EndsWith("/"))
 				{
-					apiEndpointUrl += "/";
+					contentClientBaseParameters.ApiEndpointUrl += "/";
 				}
 			}
 
-			m_apiUrl = (apiEndpointUrl ?? "https://iocontent.com/") + "api/" + apiVersion + "/content/" + subAccountkey + "/" + contentType;
+			string apiUrlPath = string.Format("api/{0}/content/{1}/{2}", contentClientBaseParameters.ApiVersion, contentClientBaseParameters.SubAccountKey, contentClientBaseParameters.ContentType);
 
-			m_memoryCacheService = new MemoryCacheService();
+			m_apiUrl = (contentClientBaseParameters.ApiEndpointUrl ?? "https://iocontent.com/") + apiUrlPath;
+
 			m_webClient = new WebClient();
-		}
 
+			m_memoryCacheService = memoryCacheService;
+        }
+
+
+		public int CacheInvalidationSeconds { get; private set; }
+
+		public bool LastResponseWasFromCache { get; private set; }
+
+		/// <summary>
+		/// Set number of seconds that queries with the following querystring should
+		/// cache responses for.
+		/// </summary>
+		/// <param name="cacheInvalidationSeconds"></param>
+		/// <returns></returns>
 		public IContentClient WithLocalCache(int cacheInvalidationSeconds)
 		{
 			CacheInvalidationSeconds = cacheInvalidationSeconds;
@@ -58,6 +69,10 @@ namespace IoContent.Sdk
 			return this;
 		}
 
+		/// <summary>
+		/// Clear cache
+		/// </summary>
+		/// <param name="queryString">Querystring for which cache should be cleared (leave null to clear all)</param>
 		public void ClearCache(string queryString = null)
 		{
 			if (queryString != null)
@@ -77,18 +92,20 @@ namespace IoContent.Sdk
 		}
 
 		/// <summary>
-		/// Returns content entries as raw Json. Property names are camel case formatted
+		/// Returns content entries as raw Json.
 		/// </summary>
-		/// <param name="queryString"></param>
+		/// <param name="queryString">Content query string.</param>
 		/// <returns></returns>
 		public string GetJson(string queryString)
 		{
+			this.LastResponseWasFromCache = true;
+
 			// No need to authenticate prior to cache call, since cache data
 			// is stored on the client
 
 			string cacheKey = GetCacheKey(queryString);
 
-			Func<object> getCacheObjCallback = () =>
+			Func<string> getCacheObjCallback = () =>
 			{
 				string jsonResponse;
 
@@ -156,10 +173,12 @@ namespace IoContent.Sdk
 
 				jsonResponse = Encoding.UTF8.GetString(bytes);
 
+				this.LastResponseWasFromCache = false;
+
 				return jsonResponse;
 			};
 
-			object cachedObject;
+			string cachedObject;
 
 			if (CacheInvalidationSeconds > 0)
 			{
@@ -175,17 +194,19 @@ namespace IoContent.Sdk
 				cachedObject = getCacheObjCallback();
             }
 
-			string json = (string) cachedObject;
+			string json = cachedObject;
 
 			return json;
 		}
 
 		/// <summary>
-		/// Returns content entries as a list of dynamics. Properties are accessed using Pascal case formatting
+		/// Returns content entries as a list of dynamics. Properties are accessed using Pascal case formatting in line 
+		/// with standard C# coding conventions.
 		/// </summary>
-		/// <param name="queryString"></param>
+		/// <param name="queryString">Content query string</param>
+		/// <param name="convertPropertyNamesToCamelCase">Set false to turn off Pascal case formatting</param>
 		/// <returns></returns>
-		public IList<dynamic> Get(string queryString)
+		public IList<dynamic> Get(string queryString, bool convertPropertyNamesToCamelCase = true)
 		{
 			string jsonResponse = GetJson(queryString);
 
@@ -196,14 +217,21 @@ namespace IoContent.Sdk
 			// we'd rather work with Pascal case, as the rest of the object was 
 			// in pascal case
 
-			var settings = new JsonSerializerSettings
+			if (convertPropertyNamesToCamelCase)
 			{
-				ContractResolver = new CamelCasePropertyNamesContractResolver(),
-				Converters = new List<JsonConverter> { new CamelCaseToPascalCaseDynamicConverter() }
-			};
+				var settings = new JsonSerializerSettings
+				{
+					ContractResolver = new CamelCasePropertyNamesContractResolver(),
+					Converters = new List<JsonConverter> { new CamelCaseToPascalCaseDynamicConverter() }
+				};
 
-			result = JsonConvert.DeserializeObject<IEnumerable<dynamic>>(jsonResponse, settings); // JsonSerializer<T>.FromJson(jsonResponse);
-			
+				result = JsonConvert.DeserializeObject<IEnumerable<dynamic>>(jsonResponse, settings);
+			}
+			else
+			{
+				result = JsonConvert.DeserializeObject<IEnumerable<dynamic>>(jsonResponse);
+			}
+
 			return result;
 		}
 
@@ -228,8 +256,6 @@ namespace IoContent.Sdk
 				m_disposed = true;
 			}
 		}
-
-		public int CacheInvalidationSeconds { get; private set; }
 
 		private string CacheKeyPrefix
 		{

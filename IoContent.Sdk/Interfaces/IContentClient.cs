@@ -7,7 +7,7 @@ namespace IoContent.Sdk.Interfaces
 	{
 		string GetJson(string queryString);
 
-		IList<dynamic> Get(string requestUrl);
+		IList<dynamic> Get(string requestUrl, bool convertPropertyNamesToCamelCase = true);
 
 		IContentClient WithLocalCache(int cacheInvalidationSeconds);
 	}
