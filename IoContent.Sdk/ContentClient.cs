@@ -1,14 +1,11 @@
 using System;
-using System.Collections.Generic;
+using System.Dynamic;
 using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Text;
-using System.Web;
 using IoContent.Sdk.Interfaces;
-using IoContent.Sdk.Serialization;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 
 namespace IoContent.Sdk
 {
@@ -178,11 +175,11 @@ namespace IoContent.Sdk
 				return jsonResponse;
 			};
 
-			string cachedObject;
+			string jsonStr;
 
 			if (CacheInvalidationSeconds > 0)
 			{
-				cachedObject = m_memoryCacheService.Get(
+				jsonStr = m_memoryCacheService.Get(
 
 					cacheKey,
 					getCacheObjCallback,
@@ -191,12 +188,10 @@ namespace IoContent.Sdk
 			}
 			else
 			{
-				cachedObject = getCacheObjCallback();
+				jsonStr = getCacheObjCallback();
             }
 
-			string json = cachedObject;
-
-			return json;
+			return jsonStr;
 		}
 
 		/// <summary>
@@ -204,35 +199,24 @@ namespace IoContent.Sdk
 		/// with standard C# coding conventions.
 		/// </summary>
 		/// <param name="queryString">Content query string</param>
-		/// <param name="convertPropertyNamesToCamelCase">Set false to turn off Pascal case formatting</param>
 		/// <returns></returns>
-		public IList<dynamic> Get(string queryString, bool convertPropertyNamesToCamelCase = true)
+		public dynamic Get(string queryString)
 		{
 			string jsonResponse = GetJson(queryString);
 
-			dynamic result;
+			dynamic response;
 
-			// Serializer settings control casing of dynamic properties.
-			// Where the data is persisted in pascal case, in the .NET API
-			// we'd rather work with Pascal case, as the rest of the object was 
-			// in pascal case
+			//Removed use of CamelCaseToPascalCaseDynamicConverter. Preferred use
+			// of ExpandoObject type for deserialization was incompatible with non essential
+			// Pascal case property name formatting
 
-			if (convertPropertyNamesToCamelCase)
-			{
-				var settings = new JsonSerializerSettings
-				{
-					ContractResolver = new CamelCasePropertyNamesContractResolver(),
-					Converters = new List<JsonConverter> { new CamelCaseToPascalCaseDynamicConverter() }
-				};
+			// Note that we deserialize using ExpandoObject - not dynamic. If we 
+			// specify dynamic we get JObject back. If we use Expando the dynamic properties
+			// are correct native .NET types
 
-				result = JsonConvert.DeserializeObject<IEnumerable<dynamic>>(jsonResponse, settings);
-			}
-			else
-			{
-				result = JsonConvert.DeserializeObject<IEnumerable<dynamic>>(jsonResponse);
-			}
+			response = JsonConvert.DeserializeObject<ExpandoObject>(jsonResponse);
 
-			return result;
+			return response;
 		}
 
 		public void Dispose()

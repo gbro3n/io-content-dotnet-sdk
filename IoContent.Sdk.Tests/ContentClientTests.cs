@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using NUnit.Framework;
 
 namespace IoContent.Sdk.Tests
@@ -17,20 +18,24 @@ namespace IoContent.Sdk.Tests
 				ContentType = "test-article-a"
 			};
 
-			dynamic content;
+			dynamic response;
 
 			using (var contentClient = new ContentClient(contentClientBaseParameters))
 			{
 				contentClient.ClearCache();
 
-				var contentList = contentClient.Get("?key.equals=r23gmukdmnbuuowk3ugrvxagac&markdownToHtml=true");
-
-				content = contentList.FirstOrDefault();
+				response = contentClient.Get("?key.equals=r23gmukdmnbuuowk3ugrvxagac&markdownToHtml=true");
 			}
 
-			Assert.NotNull(content);
-			Assert.NotNull(content.Title);
-			Assert.NotNull(content.Content);
+			Assert.NotNull(response);
+
+			Assert.NotNull(response.data[0].title);
+			Assert.NotNull(response.data[0].content);
+			Assert.NotNull(response.data[0].createdDate);
+
+			Assert.AreEqual(typeof(string), response.data[0].title.GetType());
+			Assert.AreEqual(typeof(string), response.data[0].content.GetType());
+			Assert.AreEqual(typeof(DateTime), response.data[0].createdDate.GetType());
 		}
 
 		[Test]
@@ -47,20 +52,23 @@ namespace IoContent.Sdk.Tests
 				ContentType = "test-article-a"
 			};
 
-			dynamic content;
+			dynamic response;
 
 			using (var contentClient = new ContentClient(contentClientBaseParameters))
 			{
 				contentClient.ClearCache();
 
-				var contentList = contentClient.WithLocalCache(30).Get("?key.equals=r23gmukdmnbuuowk3ugrvxagac&markdownToHtml=true");
-
-				content = contentList.FirstOrDefault();
+				response = contentClient.WithLocalCache(60).Get("?key.equals=r23gmukdmnbuuowk3ugrvxagac&markdownToHtml=true");
 			}
 
-			Assert.NotNull(content);
-			Assert.NotNull(content.Title);
-			Assert.NotNull(content.Content);
+			Assert.NotNull(response);
+			Assert.NotNull(response.data[0].title);
+			Assert.NotNull(response.data[0].content);
+			Assert.NotNull(response.data[0].createdDate);
+
+			Assert.AreEqual(typeof(string), response.data[0].title.GetType());
+			Assert.AreEqual(typeof(string), response.data[0].content.GetType());
+			Assert.AreEqual(typeof(DateTime), response.data[0].createdDate.GetType());
 		}
 	}
 }
