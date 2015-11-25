@@ -2,59 +2,62 @@
 
 The I/O Content SDK assists with making calls to the [iocontent.com](http://www.iocontent.com) REST content API.
 
-A simple example is as follows - The sub account and content type are set before requesting content via the API. In this example the  query string `key.equals=r23gmukdmnbuuowk3ugrvxagac&markdownToHtml=true` causes the API to return content with the given key and convert markdown fields to HTML.
+A simple example is shown below - The sub account and content type are set before requesting content via the API. In this example the  query string `key.equals=r23gmukdmnbuuowk3ugrvxagac&markdownToHtml=true` causes the API to return content with the given key and convert markdown fields to HTML.
 
 Further methods and properties available on the ContentClient class are documented below.
 
-Full documentation I/O Content and the API are [here](https://github.com/appsoftware/io-content-docs).
+Full documentation for I/O Content and the API can be found [here](https://iocontent.com/documentation).
 
-```
-@using IoContent.Sdk
 
-@{
-	Layout = "~/Views/Shared/MainLayout.cshtml";
-}
-
-@model Dictionary<int, string>
-
-@{
-	// Optionally pull content server side for example purposes
-
-	var contentClientBaseParameters = new ContentClientBaseParameters
-	{
-		SubAccountKey = "rvlzpmb7koytevscusj2f4ntpc",
-		ContentType = "test-article-a"
-	};
-
-	dynamic content;
-
-	using (var contentClient = new ContentClient(contentClientBaseParameters))
-	{
-		var contentList = contentClient.WithLocalCache(30).Get("?key.equals=r23gmukdmnbuuowk3ugrvxagac&markdownToHtml=true");
-
-		content = contentList.FirstOrDefault();
+	@using IoContent.Sdk
+	
+	@{
+		Layout = "~/Views/Shared/MainLayout.cshtml";
 	}
-
-	if (content != null)
-	{
-		ViewBag.Title = content.Title;
-	}
-}
-
-@section Content {
-
-	<div>
-
-		@{
-			if (content != null)
-			{
-				<div>@Html.Raw(content.Content)</div>
-			}
+	
+	@model Dictionary<int, string>
+	
+	@{
+		// Optionally pull content server side for example purposes
+	
+		var contentClientBaseParameters = new ContentClientBaseParameters
+		{
+			SubAccountKey = "rvlzpmb7koytevscusj2f4ntpc",
+			ContentType = "test-article-a"
+		};
+	
+		dynamic contentResponse;
+	
+		using (var contentClient = new ContentClient(contentClientBaseParameters))
+		{
+			contentClient.ClearCache();
+	
+			contentResponse = contentClient.WithLocalCache(30).Get("?key.equals=r23gmukdmnbuuowk3ugrvxagac&markdownToHtml=true");
 		}
+	
+		if (contentResponse != null)
+		{
+			ViewBag.Title = contentResponse.data[0].title;
+		}
+	}
+	
+	@section Content {
+	
+		<div>
+	
+			@{
+				if (contentResponse != null)
+				{
+					<div>@Html.Raw(contentResponse.data[0].content)</div>
+				}
+			}
+	
+		</div>
+	}
 
-	</div>
-}
-```
+
+
+
 
 ## Constructors
 
@@ -68,9 +71,9 @@ Overloaded constructor. A custom implementation of IMemoryCacheService can be pa
 
 ## Methods
 
-### IList<dynamic> Get(string queryString, bool convertPropertyNamesToCamelCase = true)
+### IList<dynamic> Get(string queryString)
 
-Parses the content response into a list of dynamics. Properties are accessed by the content type field key (`content.Title` or `content.Content` in the example above). Note that content field keys are camelCase by default, but are converted to PascalCase in ContentClient.Get(). This behaviour can be overridden by setting `convertPropertyNamesToCamelCase=false`.
+Parses the content response into a list of dynamics. Properties are accessed by the content type field key (`content.title` or `content.content` in the example above). Note that the content response property names are camelCase as they are found in the raw JSON response. While .NET naming conventions usually use PascalProperty names, reformatting the property names introduces a performance overhead and so is not included in this SDK.
 
 ### string GetJson(string queryString)
 
@@ -93,5 +96,5 @@ Indicates whether the last request was served from the local cache (for debuggin
 
 ### CacheInvalidationSeconds
 
-Read only access to CacheInvalidationSeconds set.
+Read only access to CacheInvalidationSeconds set in argument to `.WithLocalCache`.
 

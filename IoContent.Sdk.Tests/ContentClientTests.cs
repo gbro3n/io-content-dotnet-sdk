@@ -36,6 +36,10 @@ namespace IoContent.Sdk.Tests
 			Assert.AreEqual(typeof(string), response.data[0].title.GetType());
 			Assert.AreEqual(typeof(string), response.data[0].content.GetType());
 			Assert.AreEqual(typeof(DateTime), response.data[0].createdDate.GetType());
+
+			Assert.NotNull(response.page);
+			Assert.NotNull(response.metaData.responseId);
+			Assert.NotNull(response.metaData.lastModified);
 		}
 
 		[Test]
@@ -69,6 +73,10 @@ namespace IoContent.Sdk.Tests
 			Assert.AreEqual(typeof(string), response.data[0].title.GetType());
 			Assert.AreEqual(typeof(string), response.data[0].content.GetType());
 			Assert.AreEqual(typeof(DateTime), response.data[0].createdDate.GetType());
+
+			Assert.NotNull(response.page);
+			Assert.NotNull(response.metaData.responseId);
+			Assert.NotNull(response.metaData.lastModified);
 		}
 	}
 }
