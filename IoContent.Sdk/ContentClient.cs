@@ -39,9 +39,9 @@ namespace IoContent.Sdk
 				}
 			}
 
-			string apiUrlPath = string.Format("api/{0}/content/{1}/{2}", contentClientBaseParameters.ApiVersion, contentClientBaseParameters.SubAccountKey, contentClientBaseParameters.ContentType);
+			string apiUrlPath = string.Format("{0}/content/{1}/{2}", contentClientBaseParameters.ApiVersion, contentClientBaseParameters.SubAccountKey, contentClientBaseParameters.ContentType);
 
-			m_apiUrl = (contentClientBaseParameters.ApiEndpointUrl ?? "https://iocontent.com/") + apiUrlPath;
+			m_apiUrl = (contentClientBaseParameters.ApiEndpointUrl ?? "https://api.iocontent.com/") + apiUrlPath;
 
 			m_webClient = new WebClient();
 

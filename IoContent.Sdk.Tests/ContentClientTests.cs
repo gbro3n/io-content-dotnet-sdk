@@ -13,7 +13,7 @@ namespace IoContent.Sdk.Tests
 			var contentClientBaseParameters = new ContentClientBaseParameters
 			{
 				ApiVersion = "v1.0",
-				ApiEndpointUrl = "https://iocontent.com",
+				ApiEndpointUrl = "https://api.iocontent.com",
 				SubAccountKey = "rvlzpmb7koytevscusj2f4ntpc",
 				ContentType = "test-article-a"
 			};
@@ -51,7 +51,7 @@ namespace IoContent.Sdk.Tests
 			var contentClientBaseParameters = new ContentClientBaseParameters
 			{
 				ApiVersion = "v1.0",
-				ApiEndpointUrl = "https://iocontent.com",
+				ApiEndpointUrl = "https://api.iocontent.com",
 				SubAccountKey = "rvlzpmb7koytevscusj2f4ntpc",
 				ContentType = "test-article-a"
 			};
