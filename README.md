@@ -4,7 +4,7 @@ The I/O Content SDK assists with making calls to the [iocontent.com](http://www.
 
 An installation package is available via NuGet
 
-![Install-Package IoContent.Sdk via nuget](https://cdn.iocontent.com/api/v1.0/assets/nfm6dwvsmrd6uukgj3rzdugerc/20151110-140426333/64dr/iocontent-nuget.png)
+![Install-Package IoContent.Sdk via nuget](https://cdn.iocontent.com/v1.0/assets/nfm6dwvsmrd6uukgj3rzdugerc/20151110-140426333/64dr/iocontent-nuget.png)
 
 ## Usage
 
